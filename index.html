@@ -1,0 +1,188 @@
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crossword Puzzle</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f66dd1;
+      text-align: center;
+      padding: 20px;
+    }
+
+    #clues {
+      margin: 10px auto;
+      width: 300px;
+      text-align: left;
+    }
+
+    #crossword {
+      display: grid;
+      grid-template-columns: repeat(6, 40px);
+      gap: 2px;
+      justify-content: center;
+      margin: 20px auto;
+    }
+
+    .cell {
+      width: 40px;
+      height: 40px;
+      background: white;
+      border: 1px solid #aaa;
+      position: relative;
+    }
+
+    .cell input {
+      width: 100%;
+      height: 100%;
+      border: none;
+      text-align: center;
+      text-transform: uppercase;
+      font-size: 18px;
+      background: transparent;
+    }
+
+    .cell.black {
+      background: #88186a;
+    }
+
+    .cell .number {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      font-size: 10px;
+      color: black;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 5px;
+    }
+
+    #feedback {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>Succint's Crossword Puzzle</h2>
+<img src="https://img.cryptorank.io/coins/succinct1740058673300.png" alt="Logo" style="width: 40px; height: 40px;" />
+  <div id="clues">
+    <h3>Across</h3>
+    <ul>
+      <li><strong>1.</strong> SuccinctLabs’ zkVM (3)</li>
+      <li><strong>3.</strong> Blockchain data unit (5)</li>
+      <li><strong>6.</strong> ZK circuit language (4)</li>
+    </ul>
+
+    <h3>Down</h3>
+    <ul>
+      <li><strong>2.</strong> ZK Proof Speed (5)</li>
+      <li><strong>4.</strong> Verifiable computation (5)</li>
+    </ul>
+  </div>
+
+  <div id="crossword"></div>
+
+  <button id="checkBtn">Check Answers</button>
+  <button id="restartBtn">Restart Game</button>
+  <p id="feedback"></p>
+
+  <script>
+    const gridData = [
+      [ { letter: "S", number: "1" }, { letter: "P" }, { letter: "1" }, { black: true }, { letter: "B", number: "3" }, { black: true } ],
+      [ { letter: "P", number: "2" }, { black: true }, { black: true }, { black: true }, { letter: "L" }, { letter: "R", number: "4" } ],
+      [ { letter: "E" }, { black: true }, { black: true }, { black: true }, { letter: "O" }, { letter: "O" } ],
+      [ { letter: "E" }, { black: true }, { black: true }, { black: true }, { letter: "C" }, { letter: "O" } ],
+      [ { letter: "D" }, { black: true }, { black: true }, { black: true }, { letter: "K" }, { letter: "F" } ],
+      [ { black: true }, { letter: "R", number: "6" }, { letter: "U" }, { letter: "S" }, { letter: "T" }, { black: true } ]
+    ];
+
+    const crossword = document.getElementById("crossword");
+    const feedback = document.getElementById("feedback");
+    const checkBtn = document.getElementById("checkBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    let attempts = 3;
+
+    // Build the crossword grid
+    gridData.forEach((row) => {
+      row.forEach((cell) => {
+        const div = document.createElement("div");
+        div.className = "cell";
+        if (cell.black) {
+          div.classList.add("black");
+        } else {
+          const input = document.createElement("input");
+          input.maxLength = 1;
+          input.dataset.answer = cell.letter.toUpperCase();
+          div.appendChild(input);
+
+          if (cell.number) {
+            const num = document.createElement("div");
+            num.className = "number";
+            num.textContent = cell.number;
+            div.appendChild(num);
+          }
+        }
+        crossword.appendChild(div);
+      });
+    });
+
+    // Check answers
+    checkBtn.addEventListener("click", () => {
+      const inputs = document.querySelectorAll(".cell input");
+      let correct = 0;
+      let total = 0;
+
+      inputs.forEach(input => {
+        const expected = input.dataset.answer;
+        const val = input.value.toUpperCase();
+        if (expected) {
+          total++;
+          if (val === expected) {
+            correct++;
+            input.style.backgroundColor = "#d4ffd4";
+          } else {
+            input.style.backgroundColor = "#ffd4d4";
+          }
+        }
+      });
+
+      if (correct === total) {
+        feedback.textContent = "🎉 Congratulations! You solved the crossword!";
+        checkBtn.disabled = true;
+      } else {
+        attempts--;
+        if (attempts > 0) {
+          feedback.textContent = `❌ ${total - correct} incorrect. ${attempts} attempt(s) left.`;
+        } else {
+          feedback.textContent = "💀 Game over! No attempts left.";
+          checkBtn.disabled = true;
+
+          // Reveal correct answers
+          inputs.forEach(input => {
+            input.value = input.dataset.answer;
+            input.style.backgroundColor = "#fff4d4";
+          });
+        }
+      }
+    });
+
+    // Restart game
+    restartBtn.addEventListener("click", () => {
+      const inputs = document.querySelectorAll(".cell input");
+      inputs.forEach(input => {
+        input.value = "";
+        input.style.backgroundColor = "transparent";
+      });
+      feedback.textContent = "";
+      checkBtn.disabled = false;
+      attempts = 3;
+    });
+  </script>
+</body>
+</html>
