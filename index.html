@@ -1,4 +1,3 @@
-
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -66,34 +65,96 @@
       margin-top: 10px;
       font-weight: bold;
     }
+
+    #gameArea {
+      display: none;
+      flex-direction: row;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 40px;
+    }
+
+    .left-align {
+      justify-content: flex-start !important;
+    }
+    #crosswordHard table {
+  margin: 0 auto;
+}
+#hardModeTable {
+  border-collapse: collapse;
+  margin: 20px auto 20px 0; /* align to the left */
+}
+
+#hardModeTable td {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #aaa;
+  text-align: center;
+  vertical-align: middle;
+  position: relative;
+}
+
+#hardModeTable td input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 18px;
+  background: transparent;
+}
+
+#hardModeTable td.black {
+  background: #88186a;
+}
+#crossword.grid-mode {
+  display: grid;
+  grid-template-columns: repeat(6, 40px);
+  gap: 2px;
+  justify-content: center;
+  margin: 20px auto;
+}
+#crossword.grid-mode {
+  display: grid;
+  /* This only applies when grid-mode class is present */
+}
+#hardModeTable {
+  border-collapse: collapse;
+  margin: 20px auto 20px 0;
+  table-layout: fixed;
+  width: 240px; /* 6 columns x 40px */
+}
+
+#hardModeTable td {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #aaa;
+  text-align: center;
+  vertical-align: middle;
+  position: relative;
+}
   </style>
 </head>
 <body>
-  <h2>Succint's Crossword Puzzle</h2>
-<img src="https://img.cryptorank.io/coins/succinct1740058673300.png" alt="Logo" style="width: 40px; height: 40px;" />
-  <div id="clues">
-    <h3>Across</h3>
-    <ul>
-      <li><strong>1.</strong> SuccinctLabs’ zkVM (3)</li>
-      <li><strong>3.</strong> Blockchain data unit (5)</li>
-      <li><strong>6.</strong> ZK circuit language (4)</li>
-    </ul>
+  <h2>Succinct's Crossword Puzzle</h2>
+  <img src="https://img.cryptorank.io/coins/succinct1740058673300.png" alt="Logo" style="width: 40px; height: 40px;" />
 
-    <h3>Down</h3>
-    <ul>
-      <li><strong>2.</strong> ZK Proof Speed (5)</li>
-      <li><strong>4.</strong> Verifiable computation (5)</li>
-    </ul>
+  <div>
+    <button onclick="startGame('easy')">Easy Mode</button>
+    <button onclick="startGame('hard')">Hard Mode</button>
   </div>
 
-  <div id="crossword"></div>
+  <div id="gameArea">
+    <div id="clues"></div>
+    <div id="crossword"></div>
+  </div>
 
-  <button id="checkBtn">Check Answers</button>
-  <button id="restartBtn">Restart Game</button>
+  <button id="checkBtn" style="display:none;">Check Answers</button>
+  <button id="restartBtn" style="display:none;">Restart Game</button>
   <p id="feedback"></p>
 
   <script>
-    const gridData = [
+    const easyGrid = [
       [ { letter: "S", number: "1" }, { letter: "P" }, { letter: "1" }, { black: true }, { letter: "B", number: "3" }, { black: true } ],
       [ { letter: "P", number: "2" }, { black: true }, { black: true }, { black: true }, { letter: "L" }, { letter: "R", number: "4" } ],
       [ { letter: "E" }, { black: true }, { black: true }, { black: true }, { letter: "O" }, { letter: "O" } ],
@@ -102,41 +163,161 @@
       [ { black: true }, { letter: "R", number: "6" }, { letter: "U" }, { letter: "S" }, { letter: "T" }, { black: true } ]
     ];
 
+   const hardAnswers = [
+  { row: 0, col: 2, letter: "E", number: "1" },   // 1 Across
+  { row: 0, col: 5, letter: "R", number: "3" },
+
+  { row: 1, col: 0, letter: "Z", number: "2" },   // 2 Down
+  { row: 1, col: 1, letter: "K" },
+  { row: 1, col: 2, letter: "V" },
+  { row: 1, col: 3, letter: "M" },
+  { row: 1, col: 5, letter: "U" },   // 3 Down
+
+  { row: 2, col: 0, letter: "K", number: "4" },   // 4 Down
+  { row: 2, col: 2, letter: "M" },
+  { row: 2, col: 5, letter: "S" },
+
+  { row: 3, col: 5, letter: "T" },
+
+  { row: 4, col: 1, letter: "D", number: "5" },   // 5 Across
+  { row: 4, col: 2, letter: "A" },
+  { row: 4, col: 3, letter: "P" },
+  { row: 4, col: 4, letter: "P" },
+
+  { row: 5, col: 0, letter: "P", number: "6" },   // 6 Across
+  { row: 5, col: 1, letter: "R" },
+  { row: 5, col: 2, letter: "O" },
+  { row: 5, col: 3, letter: "O" },
+  { row: 5, col: 4, letter: "F" },
+];
+
+
     const crossword = document.getElementById("crossword");
+    const clues = document.getElementById("clues");
     const feedback = document.getElementById("feedback");
     const checkBtn = document.getElementById("checkBtn");
     const restartBtn = document.getElementById("restartBtn");
+    const gameArea = document.getElementById("gameArea");
     let attempts = 3;
 
-    // Build the crossword grid
-    gridData.forEach((row) => {
-      row.forEach((cell) => {
-        const div = document.createElement("div");
-        div.className = "cell";
-        if (cell.black) {
-          div.classList.add("black");
-        } else {
-          const input = document.createElement("input");
-          input.maxLength = 1;
-          input.dataset.answer = cell.letter.toUpperCase();
-          div.appendChild(input);
+    function startGame(mode) {
+      gameArea.style.display = "flex";
+      crossword.innerHTML = "";
+      clues.innerHTML = "";
+      gameArea.classList.toggle("left-align", mode === "hard");
+      checkBtn.style.display = restartBtn.style.display = "inline-block";
 
-          if (cell.number) {
+      if (mode === "easy") {
+        renderEasyMode();
+      } else {
+        renderHardMode();
+      }
+    }
+
+    function renderEasyMode() {
+      clues.innerHTML = `
+        <h3>Across</h3>
+        <ul>
+          <li><strong>1.</strong> SuccinctLabs’ zkVM (3)</li>
+          <li><strong>3.</strong> Blockchain data unit (5)</li>
+          <li><strong>6.</strong> ZK circuit language (4)</li>
+        </ul>
+        <h3>Down</h3>
+        <ul>
+          <li><strong>2.</strong> ZK Proof Speed (5)</li>
+          <li><strong>4.</strong> Verifiable computation (5)</li>
+        </ul>`;
+
+      easyGrid.forEach(row => {
+        row.forEach(cell => {
+          const div = document.createElement("div");
+          div.className = "cell";
+          if (cell.black) {
+            div.classList.add("black");
+          } else {
+            const input = document.createElement("input");
+            input.maxLength = 1;
+            input.dataset.answer = cell.letter.toUpperCase();
+            div.appendChild(input);
+
+            if (cell.number) {
+              const num = document.createElement("div");
+              num.className = "number";
+              num.textContent = cell.number;
+              div.appendChild(num);
+            }
+          }
+          crossword.appendChild(div);
+        });
+      });
+    }
+
+    function renderHardMode() {
+  clues.innerHTML = `
+    <h3>Across</h3>
+    <ul>
+      <li><strong>2.</strong> SP1 is a type of this virtual machine (4)</li>
+      <li><strong>5.</strong> What type of apps does vApps aim to replace? (4)</li>
+      <li><strong>6.</strong> What does the Succinct network generate? (5)</li>
+    </ul>
+    <h3>Down</h3>
+    <ul>
+      <li><strong>4.</strong> Main language used to write vApps (2)</li>
+      <li><strong>3.</strong> Succinct’s prover network uses this cryptographic method (4)</li>
+      <li><strong>1.</strong> vApps avoid this virtual machine by using native Rust (3)</li>
+    </ul>`;
+
+  const table = document.createElement("table");
+  table.id = "hardModeTable";
+
+  for (let r = 0; r < 6; r++) {
+    const tr = document.createElement("tr");
+
+    for (let c = 0; c < 6; c++) {
+      const td = document.createElement("td");
+      const isBlack =
+        (r === 0 && [0, 1, 3, 4].includes(c)) ||
+        (r === 1 && c === 4) ||
+        (r === 2 && [1, 3, 4].includes(c)) ||
+        (r === 3 && [0, 1, 2, 3, 4].includes(c)) ||
+        (r === 4 && (c === 0 || c === 5)) ||
+        (r === 5 && c === 5);
+
+      if (isBlack) {
+        td.className = "black cell";
+      } else {
+        td.className = "cell";
+        const input = document.createElement("input");
+        input.maxLength = 1;
+        const ans = hardAnswers.find(a => a.row === r && a.col === c);
+
+        if (ans) {
+          input.dataset.answer = ans.letter;
+          td.appendChild(input);
+
+          if (ans.number) {
             const num = document.createElement("div");
             num.className = "number";
-            num.textContent = cell.number;
-            div.appendChild(num);
+            num.textContent = ans.number;
+            td.appendChild(num);
           }
+        } else {
+          td.appendChild(input);
         }
-        crossword.appendChild(div);
-      });
-    });
+      }
 
-    // Check answers
+      tr.appendChild(td);
+    }
+
+    table.appendChild(tr);
+  }
+
+  crossword.appendChild(table);
+}
+
     checkBtn.addEventListener("click", () => {
       const inputs = document.querySelectorAll(".cell input");
-      let correct = 0;
-      let total = 0;
+      let correct = 0, total = 0;
 
       inputs.forEach(input => {
         const expected = input.dataset.answer;
@@ -157,22 +338,20 @@
         checkBtn.disabled = true;
       } else {
         attempts--;
-        if (attempts > 0) {
-          feedback.textContent = `❌ ${total - correct} incorrect. ${attempts} attempt(s) left.`;
-        } else {
-          feedback.textContent = "💀 Game over! No attempts left.";
-          checkBtn.disabled = true;
+        feedback.textContent = attempts > 0
+          ? `❌ ${total - correct} incorrect. ${attempts} attempt(s) left.`
+          : "💀 Game over! No attempts left.";
 
-          // Reveal correct answers
+        if (attempts <= 0) {
           inputs.forEach(input => {
             input.value = input.dataset.answer;
             input.style.backgroundColor = "#fff4d4";
           });
+          checkBtn.disabled = true;
         }
       }
     });
 
-    // Restart game
     restartBtn.addEventListener("click", () => {
       const inputs = document.querySelectorAll(".cell input");
       inputs.forEach(input => {
